@@ -26,6 +26,7 @@ if (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1 || ua.indexOf('android'
 [cm]
 [clearstack]
 [clearsysvar]
+[call storage="game_common_macro.ks"]
 [iscript]
 // タイトル用の動的オブジェクトを毎回再生成するため既存を削除
 $("#title_dynamic_panel").remove();
@@ -71,43 +72,10 @@ $("<div>")
 [endscript]
 
 ; -----------------------------------------
-; スマホ用レイアウト
+; タイトル表示マクロ読み込み
 ; -----------------------------------------
-[if exp="sf.sys_is_mobile == true"]
-
-    ; タイトルテキスト
-    [ptext layer="1" page="fore" text="脱出ゲーム集" size="70" x="0" y="120" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
-    [ptext layer="1" page="fore" text="どのゲームで遊びますか？" size="36" x="0" y="220" width="1280" align="center" color="0xdddddd" zindex="20"]
-    [ptext layer="1" page="fore" text="〇〇からの脱出" size="34" x="0" y="272" width="1280" align="center" color="0xfff1b8" zindex="20"]
-
-    [if exp="f.hotel_is_cleared == true"]
-        [ptext layer="1" page="fore" text="高層ホテルからの脱出：クリア済み" size="24" x="0" y="312" width="1280" align="center" color="0x9ef7a9" zindex="20"]
-    [endif]
-
-    ; 選択肢ボタン
-    [glink target="*trpg_game_start" text="会議室からの脱出" size="40" x="240" y="320" width="800" align="center" color="black" zindex="30"]
-    [glink target="*start" text="高層ホテルからの脱出" size="40" x="240" y="420" width="800" align="center" color="black" zindex="30"]
-    [glink target="*hotel_show_load" text="続きから" size="40" x="240" y="520" width="800" align="center" color="black" zindex="30"]
-
-; -----------------------------------------
-; PC用レイアウト
-; -----------------------------------------
-[else]
-
-    ; 1280x720向け中央揃え
-    [ptext layer="1" page="fore" text="脱出ゲーム集" size="50" x="0" y="160" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
-    [ptext layer="1" page="fore" text="どのゲームで遊びますか？" size="24" x="0" y="240" width="1280" align="center" color="0xdddddd" zindex="20"]
-    [ptext layer="1" page="fore" text="〇〇からの脱出" size="24" x="0" y="276" width="1280" align="center" color="0xfff1b8" zindex="20"]
-
-    [if exp="f.hotel_is_cleared == true"]
-        [ptext layer="1" page="fore" text="高層ホテルからの脱出：クリア済み" size="20" x="0" y="306" width="1280" align="center" color="0x9ef7a9" zindex="20"]
-    [endif]
-
-    [glink target="*trpg_game_start" text="会議室からの脱出" size="28" x="390" y="330" width="500" align="center" color="black" zindex="30"]
-    [glink target="*start" text="高層ホテルからの脱出" size="28" x="390" y="410" width="500" align="center" color="black" zindex="30"]
-    [glink target="*hotel_show_load" text="続きから" size="28" x="390" y="490" width="500" align="center" color="black" zindex="30"]
-
-[endif]
+[call storage="title_ui_macro.ks"]
+[hotel_title_layout]
 
 [s]
 
@@ -120,20 +88,8 @@ $("<div>")
 ; TRPGゲーム開始処理
 ; ==========================================
 *trpg_game_start
-[cm]
-; タイトル画面のテキストとボタンとウィンドウを消去
-[iscript]
-$("#title_bg_window").remove();
-$("#title_dynamic_panel").remove();
-$(".title_menu_item").remove();
-// メッセージウィンドウを再表示
-$(".message_outer").show();
-$(".message_inner").show();
-[endscript]
-[free name="dummy_mobile" layer="2"]
-[free name="dummy_pc" layer="2"]
-; メッセージレイヤーを再表示
-[layopt layer="message0" visible="true"]
+[call storage="game_common_macro.ks"]
+[game_prepare_scene]
 
 ;=========================================
 ; TRPG風脱出ゲーム 基本システム＆マクロ定義
@@ -181,20 +137,8 @@ $(".message_inner").show();
 ; 2. ゲーム初期化 (タイトルから「最初から」を選んだ場合の処理)
 ; ==========================================
 *start
-[cm]
-; タイトル画面のテキストとウィンドウを消去
-[iscript]
-$("#title_bg_window").remove();
-$("#title_dynamic_panel").remove();
-$(".title_menu_item").remove();
-// メッセージウィンドウを再表示
-$(".message_outer").show();
-$(".message_inner").show();
-[endscript]
-[free name="dummy_mobile" layer="2"]
-[free name="dummy_pc" layer="2"]
-; メッセージレイヤーを再表示
-[layopt layer="message0" visible="true"]
+[call storage="game_common_macro.ks"]
+[game_prepare_scene]
 
 ; --- 変数初期化 ---
 [eval exp="f.hotel_door_locked = true"]
@@ -335,7 +279,6 @@ $(".hotel_explore_btn").remove();
 
 
 *hotel_do_return_title
-[cm]
 [free name="hotel_confirm_txt" layer="1"]
 [jump target="*hotel_title"]
 
@@ -1041,5 +984,4 @@ if(typeof f.trpg_st3_turn_count !== 'undefined' && f.trpg_st3_turn_count >= 0) {
 [s]
 
 *trpg_pause_do_return_title
-[cm]
 [jump target="*hotel_title"]
