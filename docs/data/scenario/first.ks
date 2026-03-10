@@ -439,15 +439,24 @@ tf.confirm_btn_right_x = tf.confirm_btn_center_x + tf.confirm_btn_spacing / 2;
 ; ターンは消費しない（プレイヤーの思考フェーズとする）
 
 ; テキスト入力UIの生成
-[if exp="tf.is_mobile"]
-[edit name="f.trpg_st1_input_pass" left="255" top="200" width="250" height="44" maxchars="4"]
-[glink text="決定" target="*trpg_st1_door_check" x="255" y="262" width="120" height="46" size="24" cm="false"]
-[glink text="戻る" target="*trpg_st1_main" x="385" y="262" width="120" height="46" size="24" cm="false"]
-[else]
-[edit name="f.trpg_st1_input_pass" left="460" top="200" width="220" height="44" maxchars="4"]
-[glink text="決定" target="*trpg_st1_door_check" x="460" y="270" width="120" height="46" size="24" cm="false"]
-[glink text="戻る" target="*trpg_st1_main" x="590" y="270" width="120" height="46" size="24" cm="false"]
-[endif]
+[iscript]
+// 入力欄とボタンの位置を動的計算して重なりを防止
+tf.pass_input_w = 160;
+tf.pass_input_h = 50;
+tf.pass_btn_w = 80;
+tf.pass_btn_h = 46;
+tf.pass_btn_gap = 90;
+tf.pass_margin_y = 28;
+tf.pass_input_x = Math.floor((TG.config.scWidth - tf.pass_input_w) / 2);
+tf.pass_input_y = Math.floor((TG.config.scHeight - (tf.pass_input_h + tf.pass_margin_y + tf.pass_btn_h)) / 2);
+tf.pass_btn_total_w = (tf.pass_btn_w * 2) + tf.pass_btn_gap;
+tf.pass_btn_x1 = Math.floor((TG.config.scWidth - tf.pass_btn_total_w) / 2);
+tf.pass_btn_x2 = tf.pass_btn_x1 + tf.pass_btn_w + tf.pass_btn_gap;
+tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
+[endscript]
+[edit name="f.trpg_st1_input_pass" left="&tf.pass_input_x" top="&tf.pass_input_y" width="&tf.pass_input_w" height="&tf.pass_input_h" maxchars="4"]
+[glink text="決 定" target="*trpg_st1_door_check" x="&tf.pass_btn_x1" y="&tf.pass_btn_y" width="&tf.pass_btn_w" height="&tf.pass_btn_h" size="20" cm="false"]
+[glink text="戻 る" target="*trpg_st1_main" x="&tf.pass_btn_x2" y="&tf.pass_btn_y" width="&tf.pass_btn_w" height="&tf.pass_btn_h" size="20" cm="false"]
 [s]
 
 *trpg_st1_door_check
@@ -610,15 +619,24 @@ f.trpg_st2_found_note = false;   // 付箋発見フラグ
 3桁のダイヤル錠がかかっている。[p]
 ; ターンは消費しない
 
-[if exp="tf.is_mobile"]
-[edit name="f.trpg_st2_input_pass" left="280" top="200" width="200" height="44" maxchars="3"]
-[glink text="決定" target="*trpg_st2_door_check" x="255" y="262" width="120" height="46" size="24" cm="false"]
-[glink text="戻る" target="*trpg_st2_main" x="385" y="262" width="120" height="46" size="24" cm="false"]
-[else]
-[edit name="f.trpg_st2_input_pass" left="510" top="200" width="170" height="44" maxchars="3"]
-[glink text="決定" target="*trpg_st2_door_check" x="460" y="270" width="120" height="46" size="24" cm="false"]
-[glink text="戻る" target="*trpg_st2_main" x="590" y="270" width="120" height="46" size="24" cm="false"]
-[endif]
+[iscript]
+// 入力欄とボタンの位置を動的計算して重なりを防止
+tf.pass_input_w = 300;
+tf.pass_input_h = 50;
+tf.pass_btn_w = 140;
+tf.pass_btn_h = 46;
+tf.pass_btn_gap = 20;
+tf.pass_margin_y = 28;
+tf.pass_input_x = Math.floor((TG.config.scWidth - tf.pass_input_w) / 2);
+tf.pass_input_y = Math.floor((TG.config.scHeight - (tf.pass_input_h + tf.pass_margin_y + tf.pass_btn_h)) / 2);
+tf.pass_btn_total_w = (tf.pass_btn_w * 2) + tf.pass_btn_gap;
+tf.pass_btn_x1 = Math.floor((TG.config.scWidth - tf.pass_btn_total_w) / 2);
+tf.pass_btn_x2 = tf.pass_btn_x1 + tf.pass_btn_w + tf.pass_btn_gap;
+tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
+[endscript]
+[edit name="f.trpg_st2_input_pass" left="&tf.pass_input_x" top="&tf.pass_input_y" width="&tf.pass_input_w" height="&tf.pass_input_h" maxchars="3"]
+[glink text="決 定" target="*trpg_st2_door_check" x="&tf.pass_btn_x1" y="&tf.pass_btn_y" width="&tf.pass_btn_w" height="&tf.pass_btn_h" size="24" cm="false"]
+[glink text="戻 る" target="*trpg_st2_main" x="&tf.pass_btn_x2" y="&tf.pass_btn_y" width="&tf.pass_btn_w" height="&tf.pass_btn_h" size="24" cm="false"]
 [s]
 
 *trpg_st2_door_check
@@ -768,15 +786,24 @@ f.trpg_st3_found_ext = false;     // 内線番号発見フラグ
 [cm]
 4桁の数字を入力するテンキー錠がある。[p]
 
-[if exp="tf.is_mobile"]
-[edit name="f.trpg_st3_input_pass" left="255" top="200" width="250" height="44" maxchars="4"]
-[glink text="決定" target="*trpg_st3_safe_check" x="255" y="262" width="120" height="46" size="24" cm="false"]
-[glink text="戻る" target="*trpg_st3_main" x="385" y="262" width="120" height="46" size="24" cm="false"]
-[else]
-[edit name="f.trpg_st3_input_pass" left="460" top="200" width="220" height="44" maxchars="4"]
-[glink text="決定" target="*trpg_st3_safe_check" x="460" y="270" width="120" height="46" size="24" cm="false"]
-[glink text="戻る" target="*trpg_st3_main" x="590" y="270" width="120" height="46" size="24" cm="false"]
-[endif]
+[iscript]
+// 入力欄とボタンの位置を動的計算して重なりを防止
+tf.pass_input_w = 300;
+tf.pass_input_h = 50;
+tf.pass_btn_w = 140;
+tf.pass_btn_h = 46;
+tf.pass_btn_gap = 20;
+tf.pass_margin_y = 28;
+tf.pass_input_x = Math.floor((TG.config.scWidth - tf.pass_input_w) / 2);
+tf.pass_input_y = Math.floor((TG.config.scHeight - (tf.pass_input_h + tf.pass_margin_y + tf.pass_btn_h)) / 2);
+tf.pass_btn_total_w = (tf.pass_btn_w * 2) + tf.pass_btn_gap;
+tf.pass_btn_x1 = Math.floor((TG.config.scWidth - tf.pass_btn_total_w) / 2);
+tf.pass_btn_x2 = tf.pass_btn_x1 + tf.pass_btn_w + tf.pass_btn_gap;
+tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
+[endscript]
+[edit name="f.trpg_st3_input_pass" left="&tf.pass_input_x" top="&tf.pass_input_y" width="&tf.pass_input_w" height="&tf.pass_input_h" maxchars="4"]
+[glink text="決 定" target="*trpg_st3_safe_check" x="&tf.pass_btn_x1" y="&tf.pass_btn_y" width="&tf.pass_btn_w" height="&tf.pass_btn_h" size="24" cm="false"]
+[glink text="戻 る" target="*trpg_st3_main" x="&tf.pass_btn_x2" y="&tf.pass_btn_y" width="&tf.pass_btn_w" height="&tf.pass_btn_h" size="24" cm="false"]
 [s]
 
 *trpg_st3_safe_check
