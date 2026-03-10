@@ -545,7 +545,8 @@ tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
 タイムリミット！[r]
 プシュー……という音と共に、白い催涙ガスが大量に噴射された！[resetfont][p]
 激しく咳き込み、あなたは意識を失った……。[p]
-【 BAD END 】[s]
+[eval exp="f.trpg_retry_label = '*trpg_st1_start'"]
+[jump target="*trpg_game_bad_menu"]
 
 
 ;=========================================
@@ -727,7 +728,8 @@ tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
 タイムリミット！[r]
 部屋中に白い催涙ガスが完全に充満してしまった！[resetfont][p]
 激しく咳き込み、あなたは床に倒れ伏した……。[p]
-【 BAD END 】[s]
+[eval exp="f.trpg_retry_label = '*trpg_st2_start'"]
+[jump target="*trpg_game_bad_menu"]
 
 
 ;=========================================
@@ -924,14 +926,23 @@ $("<div>")
 [p]
 [font color="0xffffff" size="22"]thank you for your playing![resetfont][p]
 [p]
-[glink text="タイトル画面へ" target="*hotel_title" x="220" y="460" width="320" height="52" size="28" color="black" font_color="0xFFFFFF"]
+[glink text="終了メニューへ" target="*trpg_game_clear_menu" x="220" y="460" width="320" height="52" size="28" color="black" font_color="0xFFFFFF"]
 [else]
 [font color="0xffff00" size="48"]GAME CLEAR[resetfont][p]
 [p]
 [font color="0xffffff" size="28"]thank you for your playing![resetfont][p]
 [p]
-[glink text="タイトル画面へ" target="*hotel_title" x="460" y="500" width="360" height="60" size="30" color="black" font_color="0xFFFFFF"]
+[glink text="終了メニューへ" target="*trpg_game_clear_menu" x="460" y="500" width="360" height="60" size="30" color="black" font_color="0xFFFFFF"]
 [endif]
+[s]
+
+*trpg_game_clear_menu
+[cm]
+[font color="0xffff00" size="34"]GAME CLEAR[resetfont][p]
+[font color="0xffffff"]次の操作を選択してください。[resetfont][p]
+[r]
+[link target="*hotel_title"] タイトル画面へ [endlink][r]
+[link target="*trpg_st1_start"] もう一度プレイする（ステージ1から） [endlink][r]
 [s] ; ゲーム終了
 
 *trpg_st3_bad_end
@@ -942,7 +953,35 @@ $("<div>")
 密室の中で喉が焼け付くように痛み、あなたは激しく咳き込んで床に倒れ伏します。[p]
 薄れゆく意識の中で、重武装の警備部隊が突入してくる足音を聞きました。[p]
 翌日、「深夜のオフィスビルに侵入し、機密情報を漁っていた不審な大学生を逮捕」というニュースが流れることになるでしょう……。[p]
-[font color="0xff0000"]【 BAD END：タイムアップ 】[resetfont][p]
+[eval exp="f.trpg_retry_label = '*trpg_st3_start'"]
+[jump target="*trpg_game_bad_menu"]
+
+*trpg_game_bad_menu
+[cm]
+[iscript]
+// BAD END用の背景を共通で生成
+var sw = TG.config.scWidth || 1280;
+var sh = TG.config.scHeight || 720;
+$("#trpg_clear_bg").remove();
+$("<div>")
+    .attr("id", "trpg_clear_bg")
+    .css({
+        position: "absolute",
+        left: "0px",
+        top: "0px",
+        width: sw + "px",
+        height: sh + "px",
+        background: "rgba(0,0,0,0.92)",
+        zIndex: 1
+    })
+    .appendTo(".tyrano_base");
+[endscript]
+[font color="0xff0000" size="34"]BAD END[resetfont][p]
+[font color="0xffffff"]時間切れにより脱出に失敗しました。[resetfont][p]
+[r]
+[link target="&f.trpg_retry_label"] このステージをやり直す [endlink][r]
+[link target="*trpg_st1_start"] ステージ1からやり直す [endlink][r]
+[link target="*hotel_title"] タイトル画面へ戻る [endlink][r]
 [s] ; ゲーム終了
 
 
