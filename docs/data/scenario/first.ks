@@ -34,6 +34,8 @@ $("#trpg_clear_bg").remove();
 
 ; メッセージレイヤーを非表示
 [layopt layer="message0" visible="false"]
+; タイトル用テキストを表示
+[layopt layer="1" visible="true"]
 
 ; 背景の配置 (レイヤー0)
 [bg storage="sleep.jpg" time="1000"]
@@ -74,8 +76,13 @@ $("<div>")
 [if exp="sf.sys_is_mobile == true"]
 
     ; タイトルテキスト
-    [ptext layer="2" text="脱出ゲーム集" size="70" x="0" y="120" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
-    [ptext layer="2" text="どのゲームで遊びますか？" size="36" x="0" y="220" width="1280" align="center" color="0xdddddd" zindex="20"]
+    [ptext layer="1" page="fore" text="脱出ゲーム集" size="70" x="0" y="120" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
+    [ptext layer="1" page="fore" text="どのゲームで遊びますか？" size="36" x="0" y="220" width="1280" align="center" color="0xdddddd" zindex="20"]
+    [ptext layer="1" page="fore" text="〇〇からの脱出" size="34" x="0" y="272" width="1280" align="center" color="0xfff1b8" zindex="20"]
+
+    [if exp="f.hotel_is_cleared == true"]
+        [ptext layer="1" page="fore" text="高層ホテルからの脱出：クリア済み" size="24" x="0" y="312" width="1280" align="center" color="0x9ef7a9" zindex="20"]
+    [endif]
 
     ; 選択肢ボタン
     [glink target="*trpg_game_start" text="会議室からの脱出" size="40" x="240" y="320" width="800" align="center" color="black" zindex="30"]
@@ -88,8 +95,13 @@ $("<div>")
 [else]
 
     ; 1280x720向け中央揃え
-    [ptext layer="2" text="脱出ゲーム集" size="50" x="0" y="160" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
-    [ptext layer="2" text="どのゲームで遊びますか？" size="24" x="0" y="240" width="1280" align="center" color="0xdddddd" zindex="20"]
+    [ptext layer="1" page="fore" text="脱出ゲーム集" size="50" x="0" y="160" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
+    [ptext layer="1" page="fore" text="どのゲームで遊びますか？" size="24" x="0" y="240" width="1280" align="center" color="0xdddddd" zindex="20"]
+    [ptext layer="1" page="fore" text="〇〇からの脱出" size="24" x="0" y="276" width="1280" align="center" color="0xfff1b8" zindex="20"]
+
+    [if exp="f.hotel_is_cleared == true"]
+        [ptext layer="1" page="fore" text="高層ホテルからの脱出：クリア済み" size="20" x="0" y="306" width="1280" align="center" color="0x9ef7a9" zindex="20"]
+    [endif]
 
     [glink target="*trpg_game_start" text="会議室からの脱出" size="28" x="390" y="330" width="500" align="center" color="black" zindex="30"]
     [glink target="*start" text="高層ホテルからの脱出" size="28" x="390" y="410" width="500" align="center" color="black" zindex="30"]
@@ -126,27 +138,6 @@ $(".message_inner").show();
 ;=========================================
 ; TRPG風脱出ゲーム 基本システム＆マクロ定義
 ;=========================================
-
-; 1. 変数とフラグの初期化
-[iscript]
-// 技能値の初期設定（本来はUIで選択させますが、仮置きします）
-f.trpg_skill_search = 2; // 探索
-f.trpg_skill_know   = 1; // 知識
-f.trpg_skill_move   = 0; // 運動
-f.trpg_skill_it     = -1; // IT
-
-// ターン管理
-f.trpg_current_stage = 1;
-f.trpg_st1_turn_limit = 7;
-f.trpg_st1_turn_count = 0;
-
-// ステージ1の進行フラグ
-f.trpg_st1_has_ruler = false;    // 定規所持
-f.trpg_st1_has_cable = false;    // ケーブル所持
-f.trpg_st1_pc_unlocked = false;  // PCロック解除
-f.trpg_st1_phone_charged = false;// スマホ充電完了
-f.trpg_st1_penalty = false;      // ペナルティ状態（監視AI警戒）
-[endscript]
 
 ; 2. 2D6ダイスロール判定マクロ
 [macro name="trpg_dice_roll"]
@@ -208,6 +199,7 @@ $(".message_inner").show();
 ; --- 変数初期化 ---
 [eval exp="f.hotel_door_locked = true"]
 [eval exp="f.hotel_has_key = false"]
+[eval exp="f.hotel_is_cleared = false"]
 
 
 ; ==========================================
@@ -217,36 +209,37 @@ $(".message_inner").show();
 
 *hotel_main_room
 [cm]
+; 古いJSで生成されたボタンが残っていれば消去（念のため）
+[iscript]
+$(".hotel_explore_btn").remove();
+$(".hotel_pause_btn").remove();
+$(".hotel_confirm_btn").remove();
+[endscript]
+
 ; --- 現在の背景を保存（ポーズ画面から戻る際に復元するため） ---
 [eval exp="f.hotel_current_bg = 'hotel_room.jpg'"]
 
 高層ホテルの豪華な一室だ。[l][r]
 どうにかしてここから脱出しなければ。[l][cm]
 
-; 探索UI（中央配置マクロで横並びに配置）
-[iscript]
-// 3つのボタンを横並びで中央配置するための計算
-tf.hotel_btn_w = 100;      // 各ボタンの幅
-tf.hotel_btn_spacing = 100; // ボタン間の余白
-tf.hotel_btn_y = 380;      // Y座標（共通）
-// 中央のボタン位置を基準に、左右にオフセット
-tf.hotel_btn_center_x = (TG.config.scWidth - tf.hotel_btn_w) / 2;
-tf.hotel_btn_left_x = tf.hotel_btn_center_x - tf.hotel_btn_w - tf.hotel_btn_spacing;
-tf.hotel_btn_right_x = tf.hotel_btn_center_x + tf.hotel_btn_w + tf.hotel_btn_spacing;
-[endscript]
+; -----------------------------------------
+; 探索UI（ティラノ標準タグによる安全な実装）
+; -----------------------------------------
+; 横幅260pxのボタンを3つ横並びに配置
+[glink target="*hotel_check_door"   text="🚪 ドアを調べる" x="210" y="400" width="260" size="24" color="blue" zindex="30"]
+[glink target="*hotel_check_desk"   text="💼 机を調べる"   x="510" y="400" width="260" size="24" color="blue" zindex="30"]
+[glink target="*hotel_check_window" text="🪟 窓の外を見る" x="810" y="400" width="260" size="24" color="blue" zindex="30"]
 
-[button x="&tf.hotel_btn_left_x" y="&tf.hotel_btn_y" text="🚪\nドアを調べる" target="*hotel_check_door" width="100" height="80"]
+; 右上にポーズボタンを配置
+[glink target="*hotel_pause" text="⏸️ ポーズ" x="1050" y="20" width="160" size="24" color="blue" zindex="30"]
 
-[button x="&tf.hotel_btn_center_x" y="&tf.hotel_btn_y" text="💼\n机を調べる" target="*hotel_check_desk" width="100" height="80"]
-
-[button x="&tf.hotel_btn_right_x" y="&tf.hotel_btn_y" text="🪟\n窓の外を見る" target="*hotel_check_window" width="100" height="80"]
-
-; --- [追加] ポーズ画面へのボタン (右上固定) ---
-[button graphic="button/menu.png" enterimg="button/menu2.png" target="*hotel_pause" x="1200" y="20"]
 [s]
 
 ; --- 3. ギミック：机（アイテム取得） ---
 *hotel_check_desk
+[iscript]
+$(".hotel_explore_btn").remove();
+[endscript]
 [cm]
 立派な書斎机がある。引き出しを開けてみた。[l][cm]
 [if exp="f.hotel_has_key == false"]
@@ -260,6 +253,9 @@ tf.hotel_btn_right_x = tf.hotel_btn_center_x + tf.hotel_btn_w + tf.hotel_btn_spa
 
 ; --- 4. ギミック：窓（フレーバーテキスト） ---
 *hotel_check_window
+[iscript]
+$(".hotel_explore_btn").remove();
+[endscript]
 [cm]
 ; 窓シーンの背景を保存
 [eval exp="f.hotel_current_bg = 'hotel_window.jpg'"]
@@ -272,6 +268,9 @@ tf.hotel_btn_right_x = tf.hotel_btn_center_x + tf.hotel_btn_w + tf.hotel_btn_spa
 
 ; --- 5. ギミック：ドア（クリア判定） ---
 *hotel_check_door
+[iscript]
+$(".hotel_explore_btn").remove();
+[endscript]
 [cm]
 [if exp="f.hotel_has_key == true"]
     手に入れたカードキーを電子ロックにかざした。[l][r]
@@ -286,85 +285,54 @@ tf.hotel_btn_right_x = tf.hotel_btn_center_x + tf.hotel_btn_w + tf.hotel_btn_spa
 
 ; --- 6. エンディング ---
 *hotel_ending
+[iscript]
+$(".hotel_explore_btn").remove();
+[endscript]
 [cm]
+[eval exp="f.hotel_is_cleared = true"]
 [bg storage="hotel_corridor.jpg" time="1000"]
 部屋から脱出することに成功した！[l][cm]
-; ※ここからタイトル画面へ戻る、またはクレジットを表示するなどの処理へ繋げます
 ゲームクリア！[l][cm]
+
+[link target="*hotel_title"] タイトルへ戻る [endlink][r]
+[link target="*start"] もう一度プレイする [endlink][r]
 [s]
 
 
 ; --- 4. ポーズ画面 (背景情報の保存と復元機能付き) ---
 *hotel_pause
 [cm]
-; 背景はそのままか、ポーズ用の暗い画像（hotel_pause_bg.jpg等）に切り替えることも可能
 [bg storage="hotel_pause_bg.jpg" time="500"]
 
-; タイトルテキストを中央配置
-[iscript]
-tf.pause_title_w = 300;
-tf.pause_title_x = (TG.config.scWidth - tf.pause_title_w) / 2;
-[endscript]
-[ptext layer="1" page="fore" text="-- PAUSE --" size="30" x="&tf.pause_title_x" y="100" color="0xFFFFFF" name="hotel_pause_txt"]
+; ptextのwidth="1280" align="center" で中央揃え
+[ptext layer="1" page="fore" text="-- PAUSE --" size="30" x="0" y="100" width="1280" align="center" color="0xFFFFFF" name="hotel_pause_txt"]
 
-; ポーズメニュー（中央配置マクロ使用）
-[sys_place_center type="button" graphic="button/close.png" enterimg="button/close2.png" target="*hotel_return_game" width="200" height="60" offset_y="-120"]
-
-; ボタンラベルも中央配置
-[iscript]
-tf.pause_label_w = 200;
-tf.pause_label_x = (TG.config.scWidth - tf.pause_label_w) / 2;
-[endscript]
-[ptext layer="1" page="fore" text="ゲームに戻る" size="20" x="&tf.pause_label_x" y="313" color="0x333333" name="hotel_pause_btn1"]
-
-[sys_place_center type="button" graphic="button/save.png" enterimg="button/save2.png" target="*hotel_show_save" width="200" height="60" offset_y="-20"]
-[ptext layer="1" page="fore" text="セーブする" size="20" x="&tf.pause_label_x" y="413" color="0x333333" name="hotel_pause_btn2"]
-
-[sys_place_center type="button" graphic="button/title.png" enterimg="button/title2.png" target="*hotel_return_title_confirm" width="200" height="60" offset_y="80"]
-[ptext layer="1" page="fore" text="タイトルへ戻る" size="20" x="&tf.pause_label_x" y="513" color="0x333333" name="hotel_pause_btn3"]
+; ポーズメニューボタン (縦並び)
+[glink target="*hotel_return_game" text="▶️ ゲームに戻る"  x="490" y="300" width="300" size="24" color="green" zindex="30"]
+[glink target="*hotel_show_save"   text="💾 セーブする"    x="490" y="400" width="300" size="24" color="green" zindex="30"]
+[glink target="*hotel_return_title_confirm" text="🏠 タイトルへ戻る" x="490" y="500" width="300" size="24" color="green" zindex="30"]
 [s]
 
 *hotel_return_game
 [cm]
-; ポーズ画面のテキストを消去
 [free name="hotel_pause_txt" layer="1"]
-[free name="hotel_pause_btn1" layer="1"]
-[free name="hotel_pause_btn2" layer="1"]
-[free name="hotel_pause_btn3" layer="1"]
-
-
-; --- 背景を復元（ポーズ前の状態に戻す） ---
 [bg storage="&f.hotel_current_bg" time="500"]
-
 [jump target="*hotel_main_room"]
 
 *hotel_show_save
 [cm]
+[free name="hotel_pause_txt" layer="1"]
 [showsave]
 [jump target="*hotel_pause"]
 
 *hotel_return_title_confirm
 [cm]
-; 誤操作防止の確認（中央配置）
-[iscript]
-tf.confirm_text_w = 600;
-tf.confirm_text_x = (TG.config.scWidth - tf.confirm_text_w) / 2;
+[ptext layer="1" page="fore" text="保存していない進捗は失われます。タイトルに戻りますか？" size="24" x="0" y="250" width="1280" align="center" color="0xFFFFFF" name="hotel_confirm_txt"]
 
-// 2つのボタンを中央に横並びで配置
-tf.confirm_btn_w = 80;
-tf.confirm_btn_spacing = 100;
-tf.confirm_btn_y = 320;
-tf.confirm_btn_center_x = (TG.config.scWidth - tf.confirm_btn_w) / 2;
-tf.confirm_btn_left_x = tf.confirm_btn_center_x - tf.confirm_btn_w - tf.confirm_btn_spacing / 2;
-tf.confirm_btn_right_x = tf.confirm_btn_center_x + tf.confirm_btn_spacing / 2;
-[endscript]
-
-[ptext layer="1" page="fore" text="保存していない進捗は失われます。タイトルに戻りますか？" size="20" x="&tf.confirm_text_x" y="250" color="0xFFFFFF" name="hotel_confirm_txt"]
-
-[button x="&tf.confirm_btn_left_x" y="&tf.confirm_btn_y" text="✅ はい" target="*hotel_do_return_title" width="80" height="60"]
-
-[button x="&tf.confirm_btn_right_x" y="&tf.confirm_btn_y" text="❌ いいえ" target="*hotel_pause" width="80" height="60"]
+[glink target="*hotel_do_return_title" text="✅ はい" x="450" y="350" width="160" size="24" color="red" zindex="30"]
+[glink target="*hotel_pause"           text="❌ いいえ" x="670" y="350" width="160" size="24" color="red" zindex="30"]
 [s]
+
 
 *hotel_do_return_title
 [cm]
@@ -377,6 +345,27 @@ tf.confirm_btn_right_x = tf.confirm_btn_center_x + tf.confirm_btn_spacing / 2;
 ;=========================================
 *trpg_st1_start
 [cm]
+; 1. 変数とフラグの初期化
+[iscript]
+// 技能値の初期設定（本来はUIで選択させますが、仮置きします）
+f.trpg_skill_search = 2; // 探索
+f.trpg_skill_know   = 1; // 知識
+f.trpg_skill_move   = 0; // 運動
+f.trpg_skill_it     = -1; // IT
+
+// ターン管理
+f.trpg_current_stage = 1;
+f.trpg_st1_turn_limit = 7;
+f.trpg_st1_turn_count = 0;
+
+// ステージ1の進行フラグ
+f.trpg_st1_has_ruler = false;    // 定規所持
+f.trpg_st1_has_cable = false;    // ケーブル所持
+f.trpg_st1_pc_unlocked = false;  // PCロック解除
+f.trpg_st1_phone_charged = false;// スマホ充電完了
+f.trpg_st1_penalty = false;      // ペナルティ状態（監視AI警戒）
+[endscript]
+
 ; 背景画像の設定（リポジトリの docs/bgimage/ を想定）
 ; [bg storage="../docs/bgimage/room3.jpg" time="1000"]
 【GM】目を覚ますと、見慣れない「第3会議室」のパイプ椅子の上でした。[p]
@@ -396,9 +385,9 @@ tf.confirm_btn_right_x = tf.confirm_btn_center_x + tf.confirm_btn_spacing / 2;
 ; 2. 探索箇所の選択肢
 どこを調べますか？[p]
 
-[link target="*trpg_st1_whiteboard"] ① ホワイトボード [endlink][r]
-[link target="*trpg_st1_binder"] ② 備品入れと書類バインダー [endlink][r]
-[link target="*trpg_st1_pc"] ③ 講師が置き忘れた社用ノートPC [endlink][r]
+[link target="*trpg_st1_whiteboard"] 📋 ホワイトボード [endlink][r]
+[link target="*trpg_st1_binder"] 📁 備品入れと書類バインダー [endlink][r]
+[link target="*trpg_st1_pc"] 💻 講師が置き忘れた社用ノートPC [endlink][r]
 
 ; スマホ充電は、ケーブル所持＆PCロック解除済みの時のみ出現
 [if exp="f.trpg_st1_has_cable == true && f.trpg_st1_pc_unlocked == true && f.trpg_st1_phone_charged == false"]
@@ -589,9 +578,9 @@ f.trpg_st2_found_note = false;   // 付箋発見フラグ
 ; 3. 探索箇所の選択肢
 どこを調べますか？[p]
 
-[link target="*trpg_st2_vent"] ① 空調の吹き出し口 [endlink][r]
-[link target="*trpg_st2_podium"] ② 演台と天井のプロジェクター [endlink][r]
-[link target="*trpg_st2_screen"] ③ 巻き上げ式のスクリーン [endlink][r]
+[link target="*trpg_st2_vent"] 🌬️ 空調の吹き出し口 [endlink][r]
+[link target="*trpg_st2_podium"] 📽️ 演台と天井のプロジェクター [endlink][r]
+[link target="*trpg_st2_screen"] 📜 巻き上げ式のスクリーン [endlink][r]
 [link target="*trpg_st2_door"] 🚪 特別役員会議室への扉（ダイヤル錠） [endlink][r]
 [r]
 [link target="*trpg_pause_menu"] ⏸️ メニュー（ポーズ） [endlink][r]
@@ -765,9 +754,9 @@ f.trpg_st3_found_ext = false;     // 内線番号発見フラグ
 ; 3. 探索箇所の選択肢
 どこを調べますか？[p]
 
-[link target="*trpg_st3_table"] ① マホガニーの円卓 [endlink][r]
-[link target="*trpg_st3_shredder"] ② 業務用シュレッダー [endlink][r]
-[link target="*trpg_st3_cabinet"] ③ 役員用キャビネット [endlink][r]
+[link target="*trpg_st3_table"] 🪑 マホガニーの円卓 [endlink][r]
+[link target="*trpg_st3_shredder"] 🗑️ 業務用シュレッダー [endlink][r]
+[link target="*trpg_st3_cabinet"] 🗄️ 役員用キャビネット [endlink][r]
 [link target="*trpg_st3_safe"] 🚪 隠し金庫（非常口の横） [endlink][r]
 [r]
 [link target="*trpg_pause_menu"] ⏸️ メニュー（ポーズ） [endlink][r]
