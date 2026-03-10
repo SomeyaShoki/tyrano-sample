@@ -5,6 +5,12 @@
 ;
 ;
 
+[iscript]
+// ロード直後に動的UIが二重化しないように既存要素を掃除
+$("#title_dynamic_panel").remove();
+$("#trpg_clear_bg").remove();
+[endscript]
+
 ;=========================================
 ; [UIレイアウト] 中央配置マクロ
 ; マクロ名: sys_place_center

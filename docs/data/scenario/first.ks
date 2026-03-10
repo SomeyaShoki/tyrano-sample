@@ -1,37 +1,101 @@
-; ==========================================
-; 1. タイトル画面 (first.ks の一番上に配置)
 ; =========================================
-; タイトル画面UIレイアウト
-; 前提解像度: 1280 x 720
+; [システム] デバイス判定マクロ
+; マクロ名: sys_check_device
+; 実行環境のUserAgentを取得し、スマホかPCかを判定する
+; 判定結果はセーブにも耐える sf.sys_is_mobile に格納 (true/false)
+; =========================================
+[macro name="sys_check_device"]
+[iscript]
+// デフォルトはPC(false)とする
+sf.sys_is_mobile = false;
+
+// ユーザーエージェントを取得して小文字に変換
+var ua = navigator.userAgent.toLowerCase();
+
+// iPhone, iPad, Android, mobile を含む場合はスマホ/タブレットと判定
+if (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1 || ua.indexOf('android') > -1 || ua.indexOf('mobile') > -1) {
+    sf.sys_is_mobile = true;
+}
+[endscript]
+[endmacro]
+
+; =========================================
+; 1. タイトル画面UIレイアウト (PC/スマホ分岐対応)
 ; =========================================
 *hotel_title
 [cm]
 [clearstack]
 [clearsysvar]
+[iscript]
+// タイトル用の動的オブジェクトを毎回再生成するため既存を削除
+$("#title_dynamic_panel").remove();
+$("#trpg_clear_bg").remove();
+[endscript]
 
 ; メッセージレイヤーを非表示
 [layopt layer="message0" visible="false"]
 
-; 1. 背景の配置 (レイヤー0)
+; 背景の配置 (レイヤー0)
 [bg storage="sleep.jpg" time="1000"]
 
-; 2. 半透明の黒背景パネルの配置 (レイヤー1)
-; ※画像(panel_bg.png)のサイズを 幅800, 高さ500 と仮定した場合
-; 中央X座標 = (1280 - 800) / 2 = 240
-; 中央Y座標 = (720 - 500) / 2 = 110
-; [image layer="1" storage="panel_bg.png" x="240" y="110" width="800" height="500" zindex="10" visible="true"]
+; デバイス判定マクロの実行
+[sys_check_device]
 
-; 3. タイトルと説明文の配置 (ptextを利用)
-; x="0" width="1280" align="center" を指定することで、文字数に関係なく画面のど真ん中に配置されます。
-[ptext layer="2" text="脱出ゲーム集" size="50" x="0" y="160" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
-[ptext layer="2" text="どのゲームで遊びますか？" size="24" x="0" y="240" width="1280" align="center" color="0xdddddd" zindex="20"]
+[iscript]
+// 画面サイズに追従するタイトルパネルを動的生成
+var sw = TG.config.scWidth || 1280;
+var sh = TG.config.scHeight || 720;
+var panelW = sf.sys_is_mobile ? Math.floor(sw * 0.82) : Math.floor(sw * 0.63);
+var panelH = sf.sys_is_mobile ? Math.floor(sh * 0.78) : Math.floor(sh * 0.70);
+var panelX = Math.floor((sw - panelW) / 2);
+var panelY = Math.floor((sh - panelH) / 2);
 
-; 4. 選択肢ボタンの配置 (glinkを利用)
-; glinkはテキストとクリック判定が一体化しているため、判定ズレが起きません。
-; ボタン幅を500pxとした場合、中央X座標 = (1280 - 500) / 2 = 390
-[glink target="*trpg_game_start" text="会議室からの脱出" size="28" x="390" y="330" width="500" align="center" color="black" zindex="30"]
-[glink target="*start" text="高層ホテルからの脱出" size="28" x="390" y="410" width="500" align="center" color="black" zindex="30"]
-[glink target="*hotel_show_load" text="続きから" size="28" x="390" y="490" width="500" align="center" color="black" zindex="30"]
+$("#title_dynamic_panel").remove();
+$("<div>")
+    .attr("id", "title_dynamic_panel")
+    .css({
+        position: "absolute",
+        left: panelX + "px",
+        top: panelY + "px",
+        width: panelW + "px",
+        height: panelH + "px",
+        background: "rgba(0, 0, 0, 0.48)",
+        border: "2px solid rgba(255, 255, 255, 0.28)",
+        borderRadius: "12px",
+        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+        zIndex: 10
+    })
+    .appendTo(".tyrano_base");
+[endscript]
+
+; -----------------------------------------
+; スマホ用レイアウト
+; -----------------------------------------
+[if exp="sf.sys_is_mobile == true"]
+
+    ; タイトルテキスト
+    [ptext layer="2" text="脱出ゲーム集" size="70" x="0" y="120" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
+    [ptext layer="2" text="どのゲームで遊びますか？" size="36" x="0" y="220" width="1280" align="center" color="0xdddddd" zindex="20"]
+
+    ; 選択肢ボタン
+    [glink target="*trpg_game_start" text="会議室からの脱出" size="40" x="240" y="320" width="800" align="center" color="black" zindex="30"]
+    [glink target="*start" text="高層ホテルからの脱出" size="40" x="240" y="420" width="800" align="center" color="black" zindex="30"]
+    [glink target="*hotel_show_load" text="続きから" size="40" x="240" y="520" width="800" align="center" color="black" zindex="30"]
+
+; -----------------------------------------
+; PC用レイアウト
+; -----------------------------------------
+[else]
+
+    ; 1280x720向け中央揃え
+    [ptext layer="2" text="脱出ゲーム集" size="50" x="0" y="160" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
+    [ptext layer="2" text="どのゲームで遊びますか？" size="24" x="0" y="240" width="1280" align="center" color="0xdddddd" zindex="20"]
+
+    [glink target="*trpg_game_start" text="会議室からの脱出" size="28" x="390" y="330" width="500" align="center" color="black" zindex="30"]
+    [glink target="*start" text="高層ホテルからの脱出" size="28" x="390" y="410" width="500" align="center" color="black" zindex="30"]
+    [glink target="*hotel_show_load" text="続きから" size="28" x="390" y="490" width="500" align="center" color="black" zindex="30"]
+
+[endif]
 
 [s]
 
@@ -48,6 +112,7 @@
 ; タイトル画面のテキストとボタンとウィンドウを消去
 [iscript]
 $("#title_bg_window").remove();
+$("#title_dynamic_panel").remove();
 $(".title_menu_item").remove();
 // メッセージウィンドウを再表示
 $(".message_outer").show();
@@ -129,6 +194,7 @@ f.trpg_st1_penalty = false;      // ペナルティ状態（監視AI警戒）
 ; タイトル画面のテキストとウィンドウを消去
 [iscript]
 $("#title_bg_window").remove();
+$("#title_dynamic_panel").remove();
 $(".title_menu_item").remove();
 // メッセージウィンドウを再表示
 $(".message_outer").show();
@@ -152,7 +218,7 @@ $(".message_inner").show();
 *hotel_main_room
 [cm]
 ; --- 現在の背景を保存（ポーズ画面から戻る際に復元するため） ---
-[eval exp="tf.hotel_current_bg = 'hotel_room.jpg'"]
+[eval exp="f.hotel_current_bg = 'hotel_room.jpg'"]
 
 高層ホテルの豪華な一室だ。[l][r]
 どうにかしてここから脱出しなければ。[l][cm]
@@ -196,11 +262,11 @@ tf.hotel_btn_right_x = tf.hotel_btn_center_x + tf.hotel_btn_w + tf.hotel_btn_spa
 *hotel_check_window
 [cm]
 ; 窓シーンの背景を保存
-[eval exp="tf.hotel_current_bg = 'hotel_window.jpg'"]
+[eval exp="f.hotel_current_bg = 'hotel_window.jpg'"]
 [bg storage="hotel_window.jpg" time="500"]
 窓の下には美しい夜景が広がっている。[l][r]
 しかし、高すぎてここから脱出するのは不可能だ。[l][cm]
-[eval exp="tf.hotel_current_bg = 'hotel_room.jpg'"]
+[eval exp="f.hotel_current_bg = 'hotel_room.jpg'"]
 [bg storage="hotel_room.jpg" time="500"]
 [jump target="*hotel_main_room"]
 
@@ -268,7 +334,7 @@ tf.pause_label_x = (TG.config.scWidth - tf.pause_label_w) / 2;
 
 
 ; --- 背景を復元（ポーズ前の状態に戻す） ---
-[bg storage="&tf.hotel_current_bg" time="500"]
+[bg storage="&f.hotel_current_bg" time="500"]
 
 [jump target="*hotel_main_room"]
 
@@ -835,8 +901,25 @@ tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
 
 *trpg_game_clear
 [cm]
-[bg storage="black.jpg" time="1000"]
-[if exp="tf.is_mobile"]
+[iscript]
+// クリア画面背景を画像ではなく動的オブジェクトで全面生成
+var sw = TG.config.scWidth || 1280;
+var sh = TG.config.scHeight || 720;
+$("#trpg_clear_bg").remove();
+$("<div>")
+    .attr("id", "trpg_clear_bg")
+    .css({
+        position: "absolute",
+        left: "0px",
+        top: "0px",
+        width: sw + "px",
+        height: sh + "px",
+        background: "radial-gradient(circle at 50% 20%, rgba(60,60,60,0.9), rgba(0,0,0,1))",
+        zIndex: 1
+    })
+    .appendTo(".tyrano_base");
+[endscript]
+[if exp="sf.sys_is_mobile == true"]
 [font color="0xffff00" size="38"]GAME CLEAR[resetfont][p]
 [p]
 [font color="0xffffff" size="22"]thank you for your playing![resetfont][p]
@@ -872,14 +955,14 @@ tf.pass_btn_y = tf.pass_input_y + tf.pass_input_h + tf.pass_margin_y;
 [iscript]
 // 現在どのステージにいるか判定
 if(typeof f.trpg_st3_turn_count !== 'undefined' && f.trpg_st3_turn_count >= 0) {
-    tf.current_stage = 3;
-    tf.return_label = "*trpg_st3_main";
+    f.trpg_current_stage = 3;
+    f.trpg_return_label = "*trpg_st3_main";
 } else if(typeof f.trpg_st2_turn_count !== 'undefined' && f.trpg_st2_turn_count >= 0) {
-    tf.current_stage = 2;
-    tf.return_label = "*trpg_st2_main";
+    f.trpg_current_stage = 2;
+    f.trpg_return_label = "*trpg_st2_main";
 } else {
-    tf.current_stage = 1;
-    tf.return_label = "*trpg_st1_main";
+    f.trpg_current_stage = 1;
+    f.trpg_return_label = "*trpg_st1_main";
 }
 [endscript]
 
@@ -898,7 +981,7 @@ if(typeof f.trpg_st3_turn_count !== 'undefined' && f.trpg_st3_turn_count >= 0) {
 ;-----------------------------------------
 *trpg_pause_return
 [cm]
-[jump target="&tf.return_label"]
+[jump target="&f.trpg_return_label"]
 
 ;-----------------------------------------
 ; ログを確認する（バックログ）
