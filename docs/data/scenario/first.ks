@@ -90,18 +90,36 @@ $("<div>")
 console.log("タイトル配置完了:", "ウィンドウ内中央寄せ");
 [endscript]
 
-; メニューボタンをglinkで配置（zIndexを高く設定）
+; メニューボタンを中央配置で縦並び（画面サイズに応じて自動調整）
+[iscript]
+// ボタンの共通設定
+tf.title_btn_w = tf.is_mobile ? 490 : 400;
+tf.title_btn_h = tf.is_mobile ? 50 : 55;
+tf.title_btn_spacing = tf.is_mobile ? 70 : 65;
+
+// 中央X座標を計算
+tf.title_btn_x = (tf.screen_width - tf.title_btn_w) / 2;
+
+// 3つのボタンの中央Y座標を基準に計算
+tf.title_btn_center_y = tf.screen_height / 2;
+tf.title_btn_y1 = tf.title_btn_center_y - tf.title_btn_spacing;
+tf.title_btn_y2 = tf.title_btn_center_y;
+tf.title_btn_y3 = tf.title_btn_center_y + tf.title_btn_spacing;
+
+console.log("ボタン配置:", tf.title_btn_x, tf.title_btn_y1, tf.title_btn_y2, tf.title_btn_y3);
+[endscript]
+
 [if exp="tf.is_mobile"]
 [ptext layer="2" page="fore" text="" size="1" x="0" y="0" name="dummy_mobile"]
-[glink text="TRPG風脱出ゲーム" target="*trpg_game_start" x="145" y="260" width="490" height="50" size="26" color="0x0099CC" opacity="220" font_color="0xFFFFFF"]
-[glink text="高層ホテルからの脱出" target="*start" x="145" y="330" width="490" height="50" size="26" color="0x66BB66" opacity="220" font_color="0xFFFFFF"]
-[glink text="続きから" target="*hotel_show_load" x="145" y="400" width="490" height="50" size="26" color="0x999999" opacity="220" font_color="0xFFFFFF"]
+[glink text="TRPG風脱出ゲーム" target="*trpg_game_start" x="&tf.title_btn_x" y="&tf.title_btn_y1" width="&tf.title_btn_w" height="&tf.title_btn_h" size="26" color="0x0099CC" opacity="220" font_color="0xFFFFFF"]
+[glink text="高層ホテルからの脱出" target="*start" x="&tf.title_btn_x" y="&tf.title_btn_y2" width="&tf.title_btn_w" height="&tf.title_btn_h" size="26" color="0x66BB66" opacity="220" font_color="0xFFFFFF"]
+[glink text="続きから" target="*hotel_show_load" x="&tf.title_btn_x" y="&tf.title_btn_y3" width="&tf.title_btn_w" height="&tf.title_btn_h" size="26" color="0x999999" opacity="220" font_color="0xFFFFFF"]
 [else]
 [ptext layer="2" page="fore" text="" size="1" x="0" y="0" name="dummy_pc"]
-; PC版：ウィンドウ内中央配置（1280x720: ウィンドウ390,170-890,550）
-[glink text="TRPG風脱出ゲーム" target="*trpg_game_start" x="440" y="330" width="400" height="55" size="30" color="0x0099CC" opacity="220" font_color="0xFFFFFF"]
-[glink text="高層ホテルからの脱出" target="*start" x="440" y="395" width="400" height="55" size="30" color="0x66BB66" opacity="220" font_color="0xFFFFFF"]
-[glink text="続きから" target="*hotel_show_load" x="440" y="460" width="400" height="55" size="30" color="0x999999" opacity="220" font_color="0xFFFFFF"]
+; PC版：画面中央に自動配置
+[glink text="TRPG風脱出ゲーム" target="*trpg_game_start" x="&tf.title_btn_x" y="&tf.title_btn_y1" width="&tf.title_btn_w" height="&tf.title_btn_h" size="30" color="0x0099CC" opacity="220" font_color="0xFFFFFF"]
+[glink text="高層ホテルからの脱出" target="*start" x="&tf.title_btn_x" y="&tf.title_btn_y2" width="&tf.title_btn_w" height="&tf.title_btn_h" size="30" color="0x66BB66" opacity="220" font_color="0xFFFFFF"]
+[glink text="続きから" target="*hotel_show_load" x="&tf.title_btn_x" y="&tf.title_btn_y3" width="&tf.title_btn_w" height="&tf.title_btn_h" size="30" color="0x999999" opacity="220" font_color="0xFFFFFF"]
 [endif]
 [s]
 
@@ -227,14 +245,25 @@ $(".message_inner").show();
 高層ホテルの豪華な一室だ。[l][r]
 どうにかしてここから脱出しなければ。[l][cm]
 
-; 探索UI（Unicode 絵文字使用 + テキストボタン）
-[button x="150" y="380" text="🚪\nドアを調べる" target="*hotel_check_door" width="100" height="80"]
+; 探索UI（中央配置マクロで横並びに配置）
+[iscript]
+// 3つのボタンを横並びで中央配置するための計算
+tf.hotel_btn_w = 100;      // 各ボタンの幅
+tf.hotel_btn_spacing = 100; // ボタン間の余白
+tf.hotel_btn_y = 380;      // Y座標（共通）
+// 中央のボタン位置を基準に、左右にオフセット
+tf.hotel_btn_center_x = (TG.config.scWidth - tf.hotel_btn_w) / 2;
+tf.hotel_btn_left_x = tf.hotel_btn_center_x - tf.hotel_btn_w - tf.hotel_btn_spacing;
+tf.hotel_btn_right_x = tf.hotel_btn_center_x + tf.hotel_btn_w + tf.hotel_btn_spacing;
+[endscript]
 
-[button x="350" y="380" text="💼\n机を調べる" target="*hotel_check_desk" width="100" height="80"]
+[button x="&tf.hotel_btn_left_x" y="&tf.hotel_btn_y" text="🚪\nドアを調べる" target="*hotel_check_door" width="100" height="80"]
 
-[button x="550" y="380" text="🪟\n窓の外を見る" target="*hotel_check_window" width="100" height="80"]
+[button x="&tf.hotel_btn_center_x" y="&tf.hotel_btn_y" text="💼\n机を調べる" target="*hotel_check_desk" width="100" height="80"]
 
-; --- [追加] ポーズ画面へのボタン (画像ボタン使用) ---
+[button x="&tf.hotel_btn_right_x" y="&tf.hotel_btn_y" text="🪟\n窓の外を見る" target="*hotel_check_window" width="100" height="80"]
+
+; --- [追加] ポーズ画面へのボタン (右上固定) ---
 [button graphic="button/menu.png" enterimg="button/menu2.png" target="*hotel_pause" x="1200" y="20"]
 [s]
 
@@ -292,17 +321,29 @@ $(".message_inner").show();
 [cm]
 ; 背景はそのままか、ポーズ用の暗い画像（hotel_pause_bg.jpg等）に切り替えることも可能
 [bg storage="hotel_pause_bg.jpg" time="500"]
-[ptext layer="1" page="fore" text="-- PAUSE --" size="30" x="550" y="100" color="0xFFFFFF" name="hotel_pause_txt"]
 
-; ポーズメニュー（画像ボタン使用）
-[button graphic="button/close.png" enterimg="button/close2.png" target="*hotel_return_game" x="500" y="300"]
-[ptext layer="1" page="fore" text="ゲームに戻る" size="20" x="530" y="313" color="0x333333" name="hotel_pause_btn1"]
+; タイトルテキストを中央配置
+[iscript]
+tf.pause_title_w = 300;
+tf.pause_title_x = (TG.config.scWidth - tf.pause_title_w) / 2;
+[endscript]
+[ptext layer="1" page="fore" text="-- PAUSE --" size="30" x="&tf.pause_title_x" y="100" color="0xFFFFFF" name="hotel_pause_txt"]
 
-[button graphic="button/save.png" enterimg="button/save2.png" target="*hotel_show_save" x="500" y="400"]
-[ptext layer="1" page="fore" text="セーブする" size="20" x="530" y="413" color="0x333333" name="hotel_pause_btn2"]
+; ポーズメニュー（中央配置マクロ使用）
+[sys_place_center type="button" graphic="button/close.png" enterimg="button/close2.png" target="*hotel_return_game" width="200" height="60" offset_y="-120"]
 
-[button graphic="button/title.png" enterimg="button/title2.png" target="*hotel_return_title_confirm" x="500" y="500"]
-[ptext layer="1" page="fore" text="タイトルへ戻る" size="20" x="530" y="513" color="0x333333" name="hotel_pause_btn3"]
+; ボタンラベルも中央配置
+[iscript]
+tf.pause_label_w = 200;
+tf.pause_label_x = (TG.config.scWidth - tf.pause_label_w) / 2;
+[endscript]
+[ptext layer="1" page="fore" text="ゲームに戻る" size="20" x="&tf.pause_label_x" y="313" color="0x333333" name="hotel_pause_btn1"]
+
+[sys_place_center type="button" graphic="button/save.png" enterimg="button/save2.png" target="*hotel_show_save" width="200" height="60" offset_y="-20"]
+[ptext layer="1" page="fore" text="セーブする" size="20" x="&tf.pause_label_x" y="413" color="0x333333" name="hotel_pause_btn2"]
+
+[sys_place_center type="button" graphic="button/title.png" enterimg="button/title2.png" target="*hotel_return_title_confirm" width="200" height="60" offset_y="80"]
+[ptext layer="1" page="fore" text="タイトルへ戻る" size="20" x="&tf.pause_label_x" y="513" color="0x333333" name="hotel_pause_btn3"]
 [s]
 
 *hotel_return_game
@@ -326,12 +367,25 @@ $(".message_inner").show();
 
 *hotel_return_title_confirm
 [cm]
-; 誤操作防止の確認（Unicode 絵文字使用）
-[ptext layer="1" page="fore" text="保存していない進捗は失われます。タイトルに戻りますか？" size="20" x="350" y="250" color="0xFFFFFF" name="hotel_confirm_txt"]
+; 誤操作防止の確認（中央配置）
+[iscript]
+tf.confirm_text_w = 600;
+tf.confirm_text_x = (TG.config.scWidth - tf.confirm_text_w) / 2;
 
-[button x="400" y="320" text="✅ はい" target="*hotel_do_return_title" width="80" height="60"]
+// 2つのボタンを中央に横並びで配置
+tf.confirm_btn_w = 80;
+tf.confirm_btn_spacing = 100;
+tf.confirm_btn_y = 320;
+tf.confirm_btn_center_x = (TG.config.scWidth - tf.confirm_btn_w) / 2;
+tf.confirm_btn_left_x = tf.confirm_btn_center_x - tf.confirm_btn_w - tf.confirm_btn_spacing / 2;
+tf.confirm_btn_right_x = tf.confirm_btn_center_x + tf.confirm_btn_spacing / 2;
+[endscript]
 
-[button x="600" y="320" text="❌ いいえ" target="*hotel_pause" width="80" height="60"]
+[ptext layer="1" page="fore" text="保存していない進捗は失われます。タイトルに戻りますか？" size="20" x="&tf.confirm_text_x" y="250" color="0xFFFFFF" name="hotel_confirm_txt"]
+
+[button x="&tf.confirm_btn_left_x" y="&tf.confirm_btn_y" text="✅ はい" target="*hotel_do_return_title" width="80" height="60"]
+
+[button x="&tf.confirm_btn_right_x" y="&tf.confirm_btn_y" text="❌ いいえ" target="*hotel_pause" width="80" height="60"]
 [s]
 
 *hotel_do_return_title
