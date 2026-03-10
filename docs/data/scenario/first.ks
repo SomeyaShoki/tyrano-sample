@@ -1,126 +1,38 @@
 ; ==========================================
 ; 1. タイトル画面 (first.ks の一番上に配置)
-; ==========================================
+; =========================================
+; タイトル画面UIレイアウト
+; 前提解像度: 1280 x 720
+; =========================================
 *hotel_title
 [cm]
 [clearstack]
 [clearsysvar]
-; タイトル背景の表示
-[bg storage="sleep.jpg" time="1000"]
+
 ; メッセージレイヤーを非表示
 [layopt layer="message0" visible="false"]
 
-; デバイス判定と画面サイズ確認、レイアウト計算
-[iscript]
-tf.is_mobile = $.userenv() != "pc";
-// 画面サイズを取得
-tf.screen_width = TYRANO.kag.config.scWidth || 1280;
-tf.screen_height = TYRANO.kag.config.scHeight || 720;
+; 1. 背景の配置 (レイヤー0)
+[bg storage="sleep.jpg" time="1000"]
 
-// 黒半透明ウィンドウのサイズと位置を計算
-tf.window_width = tf.is_mobile ? 600 : 500;
-tf.window_height = tf.is_mobile ? 450 : 380;
-tf.window_x = Math.floor((tf.screen_width - tf.window_width) / 2);
-tf.window_y = tf.is_mobile ? 90 : Math.floor((tf.screen_height - tf.window_height) / 2);
+; 2. 半透明の黒背景パネルの配置 (レイヤー1)
+; ※画像(panel_bg.png)のサイズを 幅800, 高さ500 と仮定した場合
+; 中央X座標 = (1280 - 800) / 2 = 240
+; 中央Y座標 = (720 - 500) / 2 = 110
+; [image layer="1" storage="panel_bg.png" x="240" y="110" width="800" height="500" zindex="10" visible="true"]
 
-// デバッグ用：コンソールに出力
-console.log("画面サイズ:", tf.screen_width, "x", tf.screen_height);
-console.log("ウィンドウ:", tf.window_x, tf.window_y, tf.window_width, tf.window_height);
+; 3. タイトルと説明文の配置 (ptextを利用)
+; x="0" width="1280" align="center" を指定することで、文字数に関係なく画面のど真ん中に配置されます。
+[ptext layer="2" text="脱出ゲーム集" size="50" x="0" y="160" width="1280" align="center" color="0xffffff" bold="true" zindex="20"]
+[ptext layer="2" text="どのゲームで遊びますか？" size="24" x="0" y="240" width="1280" align="center" color="0xdddddd" zindex="20"]
 
-// 既存のウィンドウを削除（リロード対策）
-$("#title_bg_window").remove();
-$(".title_menu_item").remove();
+; 4. 選択肢ボタンの配置 (glinkを利用)
+; glinkはテキストとクリック判定が一体化しているため、判定ズレが起きません。
+; ボタン幅を500pxとした場合、中央X座標 = (1280 - 500) / 2 = 390
+[glink target="*trpg_game_start" text="会議室からの脱出" size="28" x="390" y="330" width="500" align="center" color="black" zindex="30"]
+[glink target="*start" text="高層ホテルからの脱出" size="28" x="390" y="410" width="500" align="center" color="black" zindex="30"]
+[glink target="*hotel_show_load" text="続きから" size="28" x="390" y="490" width="500" align="center" color="black" zindex="30"]
 
-// メッセージウィンドウを確実に非表示
-$(".message_outer").hide();
-$(".message_inner").hide();
-
-// 黒半透明のウィンドウをHTML要素として作成
-$("<div>")
-    .attr("id", "title_bg_window")
-    .css({
-        position: "absolute",
-        left: tf.window_x + "px",
-        top: tf.window_y + "px",
-        width: tf.window_width + "px",
-        height: tf.window_height + "px",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        border: "2px solid rgba(255, 255, 255, 0.3)",
-        borderRadius: "10px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
-        zIndex: 100
-    })
-    .appendTo(".tyrano_base");
-
-// タイトルテキスト（ウィンドウ内中央寄せ）
-$("<div>")
-    .addClass("title_menu_item")
-    .text("脱出ゲーム集")
-    .css({
-        position: "absolute",
-        left: tf.window_x + "px",
-        top: (tf.window_y + 40) + "px",
-        width: tf.window_width + "px",
-        fontSize: tf.is_mobile ? "36px" : "48px",
-        color: "#FFFFFF",
-        fontWeight: "bold",
-        textAlign: "center",
-        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.8)",
-        zIndex: 110
-    })
-    .appendTo(".tyrano_base");
-
-// サブタイトル（ウィンドウ内中央寄せ）
-$("<div>")
-    .addClass("title_menu_item")
-    .text("どのゲームで遊びますか？")
-    .css({
-        position: "absolute",
-        left: tf.window_x + "px",
-        top: (tf.window_y + 110) + "px",
-        width: tf.window_width + "px",
-        fontSize: tf.is_mobile ? "20px" : "24px",
-        color: "#FFFFFF",
-        textAlign: "center",
-        textShadow: "1px 1px 3px rgba(0, 0, 0, 0.8)",
-        zIndex: 110
-    })
-    .appendTo(".tyrano_base");
-
-console.log("タイトル配置完了:", "ウィンドウ内中央寄せ");
-[endscript]
-
-; メニューボタンを中央配置で縦並び（画面サイズに応じて自動調整）
-[iscript]
-// ボタンの共通設定
-tf.title_btn_w = tf.is_mobile ? 490 : 400;
-tf.title_btn_h = tf.is_mobile ? 50 : 55;
-tf.title_btn_spacing = tf.is_mobile ? 70 : 65;
-
-// 中央X座標を計算
-tf.title_btn_x = (tf.screen_width - tf.title_btn_w) / 2;
-
-// 3つのボタンの中央Y座標を基準に計算
-tf.title_btn_center_y = tf.screen_height / 2;
-tf.title_btn_y1 = tf.title_btn_center_y - tf.title_btn_spacing;
-tf.title_btn_y2 = tf.title_btn_center_y;
-tf.title_btn_y3 = tf.title_btn_center_y + tf.title_btn_spacing;
-
-console.log("ボタン配置:", tf.title_btn_x, tf.title_btn_y1, tf.title_btn_y2, tf.title_btn_y3);
-[endscript]
-
-[if exp="tf.is_mobile"]
-[ptext layer="2" page="fore" text="" size="1" x="0" y="0" name="dummy_mobile"]
-[glink text="TRPG風脱出ゲーム" target="*trpg_game_start" x="&tf.title_btn_x" y="&tf.title_btn_y1" width="&tf.title_btn_w" height="&tf.title_btn_h" size="26" color="0x0099CC" opacity="220" font_color="0xFFFFFF"]
-[glink text="高層ホテルからの脱出" target="*start" x="&tf.title_btn_x" y="&tf.title_btn_y2" width="&tf.title_btn_w" height="&tf.title_btn_h" size="26" color="0x66BB66" opacity="220" font_color="0xFFFFFF"]
-[glink text="続きから" target="*hotel_show_load" x="&tf.title_btn_x" y="&tf.title_btn_y3" width="&tf.title_btn_w" height="&tf.title_btn_h" size="26" color="0x999999" opacity="220" font_color="0xFFFFFF"]
-[else]
-[ptext layer="2" page="fore" text="" size="1" x="0" y="0" name="dummy_pc"]
-; PC版：画面中央に自動配置
-[glink text="TRPG風脱出ゲーム" target="*trpg_game_start" x="&tf.title_btn_x" y="&tf.title_btn_y1" width="&tf.title_btn_w" height="&tf.title_btn_h" size="30" color="0x0099CC" opacity="220" font_color="0xFFFFFF"]
-[glink text="高層ホテルからの脱出" target="*start" x="&tf.title_btn_x" y="&tf.title_btn_y2" width="&tf.title_btn_w" height="&tf.title_btn_h" size="30" color="0x66BB66" opacity="220" font_color="0xFFFFFF"]
-[glink text="続きから" target="*hotel_show_load" x="&tf.title_btn_x" y="&tf.title_btn_y3" width="&tf.title_btn_w" height="&tf.title_btn_h" size="30" color="0x999999" opacity="220" font_color="0xFFFFFF"]
-[endif]
 [s]
 
 *hotel_show_load
